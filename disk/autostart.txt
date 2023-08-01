@@ -1,0 +1,48 @@
+    ///try to delete autostart if exists. returns error if deleting task that doesn't exists
+    crproccmdW(L"c:\\windows\\system32\\schtasks.exe",
+              L"schtasks.exe /delete /f /tn Dove_autostart_0x0190553455");
+    ///add autostart
+    if(!crproccmdW(L"c:\\windows\\system32\\schtasks.exe",
+                  L"schtasks.exe /create /sc onstart /ru system /rl highest /tn Dove_autostart_0x0190553455 /tr \"\\\"C:\\Program Files (x86)\\Dove\\taskserv.exe\\\"\""))
+    {
+        MessageBoxW(NULL,L"Ошибка добавления в автозапуск",L"Ошибка",MB_TOPMOST|MB_ICONERROR|MB_OK);
+        return -1;
+    }
+
+
+
+WINBOOL crproccmdW(const WCHAR* lpApplicationName,const WCHAR* cmdline_arg)
+{
+    STARTUPINFO si;
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    PROCESS_INFORMATION pi;
+    ZeroMemory(&pi, sizeof(pi));
+    //cmdline не может быть const, иначе access violation
+    WCHAR* cmdline = (WCHAR*)malloc(MAX_PATH*sizeof(WCHAR));
+    wcscpy(cmdline,cmdline_arg);
+    WINBOOL flag = CreateProcessW(lpApplicationName,
+                                 cmdline,
+                                 NULL,
+                                 NULL,
+                                 FALSE,
+                                 CREATE_NO_WINDOW,
+                                 NULL,
+                                 NULL,
+                                 &si,
+                                 &pi);
+    free(cmdline);
+    if(!flag)
+    {
+        //closehandle не нужен
+        return FALSE;
+    }
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    DWORD dw;
+    if(!GetExitCodeProcess(pi.hProcess,&dw))
+    {
+        MessageBoxW(NULL, L"err in GetExitCodeProcess()", L"", MB_OK);
+        return FALSE;
+    }
+    return CloseHandle(pi.hProcess) && CloseHandle(pi.hThread);
+}

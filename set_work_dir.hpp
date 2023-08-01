@@ -1,0 +1,4 @@
+#ifndef SET_WORK_DIR_HPP_INCLUDED
+#define SET_WORK_DIR_HPP_INCLUDED
+BOOL set_work_dir();
+#endif // SET_WORK_DIR_HPP_INCLUDED
